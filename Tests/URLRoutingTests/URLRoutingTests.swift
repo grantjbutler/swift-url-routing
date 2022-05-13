@@ -92,6 +92,21 @@ class URLRoutingTests: XCTestCase {
       URLRequestData(query: [:])
     )
   }
+  
+  func testFragment() throws {
+    let p = Fragment {
+      Prefix { $0 != "-" }
+      "-"
+      Digits()
+    }
+    
+    var request = URLRequestData(string: "/#page-10")!
+    let (prefix, count) = try p.parse(&request)
+    XCTAssertEqual("page", prefix)
+    XCTAssertEqual(10, count)
+    
+    XCTAssertEqual(try p.print(("page"[...], 10)), URLRequestData(fragment: "page-10"))
+  }
 
   func testCookies() throws {
     struct Session: Equatable {

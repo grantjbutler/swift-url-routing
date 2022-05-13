@@ -41,6 +41,9 @@ public struct URLRequestData: Equatable, _EmptyInitializable {
   /// To incrementally parse from these fields, use the ``Headers`` parser.
   public var query: Fields = .init([:], isNameCaseSensitive: true)
 
+  /// The fragment subcomponent of the request URL.
+  public var fragment: String?
+
   /// The scheme, _e.g._ `"https"` or `"http"`.
   public var scheme: String?
 
@@ -61,6 +64,7 @@ public struct URLRequestData: Equatable, _EmptyInitializable {
   ///   - port: The port subcomponent of the request URL.
   ///   - path: An array of the request URL's path components.
   ///   - query: The query subcomponent of the request URL.
+  ///   - fragment: The fragment subcomponent of the request URL.
   ///   - headers: The request headers.
   ///   - body: The request body.
   @inlinable
@@ -73,6 +77,7 @@ public struct URLRequestData: Equatable, _EmptyInitializable {
     port: Int? = nil,
     path: String = "",
     query: [String: [String?]] = [:],
+    fragment: String? = nil,
     headers: [String: [String?]] = [:],
     body: Data? = nil
   ) {
@@ -84,6 +89,7 @@ public struct URLRequestData: Equatable, _EmptyInitializable {
     self.path = path.split(separator: "/")[...]
     self.port = port
     self.query = .init(query.mapValues { $0.map { $0?[...] }[...] }, isNameCaseSensitive: true)
+    self.fragment = fragment
     self.scheme = scheme
     self.user = user
   }
@@ -147,6 +153,7 @@ extension URLRequestData: Codable {
       port: try container.decodeIfPresent(Int.self, forKey: .port),
       path: try container.decodeIfPresent(String.self, forKey: .path) ?? "",
       query: try container.decodeIfPresent([String: [String?]].self, forKey: .query) ?? [:],
+      fragment: try container.decodeIfPresent(String.self, forKey: .fragment),
       headers: try container.decodeIfPresent([String: [String?]].self, forKey: .headers) ?? [:],
       body: try container.decodeIfPresent(Data.self, forKey: .body)
     )
@@ -173,6 +180,7 @@ extension URLRequestData: Codable {
         forKey: .query
       )
     }
+    try container.encodeIfPresent(self.fragment, forKey: .fragment)
     try container.encodeIfPresent(self.scheme, forKey: .scheme)
     try container.encodeIfPresent(self.user, forKey: .user)
   }
@@ -187,6 +195,7 @@ extension URLRequestData: Codable {
     case path
     case port
     case query
+    case fragment
     case scheme
     case user
   }
@@ -203,6 +212,7 @@ extension URLRequestData: Hashable {
     hasher.combine(self.path)
     hasher.combine(self.port)
     hasher.combine(self.query)
+    hasher.combine(self.fragment)
     hasher.combine(self.scheme)
     hasher.combine(self.user)
   }
